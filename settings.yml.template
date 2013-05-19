@@ -1,7 +1,8 @@
 imap_host: imap.serveur.com
 imap_port: 993
 imap_ssl: true
+# imap_auth_mechanism: PLAIN # Uncomment to precise an AUTH mechanism. Otherwise login will be used. For Gmail, keep commented.
 imap_user: user
 imap_password: password
-token_email: abc
+# token_email: abc # Uncomment if you want to check the email using the token in the "to" address
 

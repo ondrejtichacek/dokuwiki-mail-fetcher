@@ -7,7 +7,11 @@ settings = YAML.load_file('settings.yml')
 
 #Start the actual work
 imap = Net::IMAP.new(settings['imap_host'], settings['imap_port'], settings['imap_ssl'], nil, false)
-imap.authenticate('LOGIN', settings['imap_user'], settings['imap_password'])
+if settings['imap_auth_mechanism'].nil?
+  imap.login(settings['imap_user'], settings['imap_password'])
+else
+  imap.authenticate(settings['imap_auth_mechanism'], settings['imap_user'], settings['imap_password'])
+end
 imap.select('INBOX')
       
 #Select unseen messages only
@@ -18,20 +22,25 @@ imap.search(["NOT", "SEEN"]).each do |message_id|
 	#Parse it with mail library
 	mail = Mail.read_from_string(raw)
 	token = mail.to.to_s
-	#If multipart or auth token not included, then discard the mail and send a warning
-	if mail.multipart? or (not token.include?(settings['token_email'].to_s))
-    		imap.copy(message_id, 'Untreated')
-    	else
+	#If multipart or auth token not included, then discard the mail
+	if mail.multipart? or (not settings['token_email'].nil? and not token.include?(settings['token_email'].to_s))
+    imap.copy(message_id, 'Untreated')
+  else
 		content = mail.body.decoded
-		name = mail.subject
-		date = mail.date
+		subject = mail.subject
+		date = mail.date.strftime("%Y-%m-%d-%H-%M-%S")
+		
+		#Adding title (i.e. subject from email)) with dokuwiki syntax
+		content = "==== " + subject + " ====\n" + content
+    link = "[[#{date}|#{subject}]]"
 
-		#Here, create the file
-		puts content
-
+		#Here, create the file and write the content
+		File.open(settings['local_folder']+date+'.txt', 'w') {|f| f.write(content) }
+		File.open(settings['local_folder']+'start.txt', 'a') {|f| f.write(link) }
+		
 		imap.copy(message_id, 'Treated')
 	end
-        imap.store(message_id, '+FLAGS', [:Deleted])
+    imap.store(message_id, '+FLAGS', [:Deleted])
 end
 imap.expunge #Delete all mails with deleted flags
 imap.close
