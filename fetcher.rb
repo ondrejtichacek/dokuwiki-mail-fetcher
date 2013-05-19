@@ -32,9 +32,10 @@ imap.search(["NOT", "SEEN"]).each do |message_id|
 		
 		#Adding title (i.e. subject from email)) with dokuwiki syntax
 		content = "==== " + subject + " ====\n" + content
+		#Formating a link to be inserted in the dokuwiki start page
     link = "[[#{date}|#{subject}]]"
 
-		#Here, create the file and write the content
+		#Here, create the file and write the content in the dokuwiki folder
 		File.open(settings['local_folder']+date+'.txt', 'w') {|f| f.write(content) }
 		File.open(settings['local_folder']+'start.txt', 'a') {|f| f.write(link) }
 		
