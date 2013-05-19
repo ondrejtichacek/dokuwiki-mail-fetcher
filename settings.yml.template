@@ -1,0 +1,7 @@
+imap_host: imap.serveur.com
+imap_port: 993
+imap_ssl: true
+imap_user: user
+imap_password: password
+token_email: abc
+
