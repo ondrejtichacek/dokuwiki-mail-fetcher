@@ -13,7 +13,7 @@ else
   imap.authenticate(settings['imap_auth_mechanism'], settings['imap_user'], settings['imap_password'])
 end
 imap.select('INBOX')
-      
+
 #Select unseen messages only
 imap.search(["NOT", "SEEN"]).each do |message_id|
 	#Get the full content
@@ -26,19 +26,21 @@ imap.search(["NOT", "SEEN"]).each do |message_id|
 	if mail.multipart? or (not settings['token_email'].nil? and not token.include?(settings['token_email'].to_s))
     imap.copy(message_id, 'Untreated')
   else
-		content = mail.body.decoded
+		content = mail.body.decoded.force_encoding(mail.charset).encode("UTF-8")
 		subject = mail.subject
 		date = mail.date.strftime("%Y-%m-%d-%H-%M-%S")
-		
+
 		#Adding title (i.e. subject from email)) with dokuwiki syntax
-		content = "==== " + subject + " ====\n" + content
+		content = "==== " + subject.to_s + " ====\n\n" + content.to_s
 		#Formating a link to be inserted in the dokuwiki start page
-    link = "[[#{date}|#{subject}]]"
+    link = "\n\n[[#{date}|#{subject}]]"
 
 		#Here, create the file and write the content in the dokuwiki folder
-		File.open(settings['local_folder']+date+'.txt', 'w') {|f| f.write(content) }
-		File.open(settings['local_folder']+'start.txt', 'a') {|f| f.write(link) }
-		
+    File.umask(0012)
+		File.open(settings['local_folder']+date+'.txt', 'w:UTF-8') {|f| f.write(content) }
+		File.open(settings['local_folder']+'start.txt', 'a:UTF-8') {|f| f.write(link) }
+    puts "One message treated"
+
 		imap.copy(message_id, 'Treated')
 	end
     imap.store(message_id, '+FLAGS', [:Deleted])
