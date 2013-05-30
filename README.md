@@ -12,7 +12,7 @@ All settings should be configured in settings.yml (how original!).
 * imap_user: username
 * imap_password: password
 * token_email: if uncommented, then the token mechanism is activated
-* local_folder: 
+* local_folder: path to the dokuwiki instance
 
 Email token mechanism
 ---------------------
