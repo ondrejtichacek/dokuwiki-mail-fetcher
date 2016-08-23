@@ -1,7 +1,7 @@
 require 'net/imap'
 require 'mail'
 require 'yaml'
-
+require 'time'
 require 'tempfile'
 
 def repeat_try_shell(command={})
@@ -24,6 +24,8 @@ rescue Exception => e
 else
 end
 
+puts Time.now.utc.iso8601
+
 #Retrieve settings from external file
 settings = YAML.load_file('settings.yml')
 
@@ -42,6 +44,7 @@ imap.search(["NOT", "SEEN"]).each do |message_id|
     #Get the full content
     msg = imap.fetch(message_id,'RFC822')[0].attr['RFC822']
     mail = Mail.read_from_string msg
+    date = mail.date.strftime("%Y-%m-%d-%H-%M-%S")
 
     #Lock and checkout target file
     repeat_try_shell('../bin/dwpage.php --user automat lock start')
@@ -54,11 +57,7 @@ imap.search(["NOT", "SEEN"]).each do |message_id|
     line_to_find = '====== News ======'
 
     #Line to add into the target file (after the line to find)
-    line_to_add = "<WRAP box 100%>\n" + \
-                  "<color #AAAAAA>" +  mail.date.to_s + " from " + mail.from.to_s + "</color>\n" + \
-                  "==== " + mail.subject + " ====\n\n" + \
-                  mail.text_part.body.decoded.to_s.gsub!("_______________________________________________\npavelsgroup mailing list\npavelsgroup@marge.uochb.cas.cz\nhttp://marge.uochb.cas.cz/mailman/listinfo/pavelsgroup"," ") + \
-                  "</WRAP>\n"
+    line_to_add = "{{page>mail:"+date+"}}"
 
     #Work in temporary file
     temp_file = Tempfile.new('start')
@@ -74,6 +73,34 @@ imap.search(["NOT", "SEEN"]).each do |message_id|
         #Start commiting changes
         repeat_try_shell('../bin/dwpage.php --user automat commit --message "auto update" ' + temp_file.path + ' start')
         repeat_try_shell('../bin/dwpage.php --user automat unlock start')
+
+    ensure
+        temp_file.delete
+    end
+
+    subject = mail.subject 
+    plain_part = mail.multipart? ? (mail.text_part ? mail.text_part.body.decoded : nil) : mail.body.decoded
+    html_part = mail.html_part ? mail.html_part.body.decoded : nil
+
+#    puts plain_part
+  
+    subject.gsub!("sometext","")
+    plain_part.gsub!("othertext","")
+
+    #Parse the email to wiki syntax 
+    parsed_mail = "<WRAP box 100%>\n" + \
+                  "<color #AAAAAA>" +  mail.date.to_s + " from " + mail.from.to_s + "</color>\n" + \
+                  "==== " + subject + " ====\n\n" + plain_part + "</WRAP>\n"
+    
+    #Work in temporary file
+    temp_file = Tempfile.new(date)
+
+    begin
+        temp_file.puts(parsed_mail)
+        temp_file.close
+      
+        #Start commiting changes
+        repeat_try_shell('../bin/dwpage.php --user automat commit --message "auto update" ' + temp_file.path + ' mail:' + date)
 
     ensure
         temp_file.delete
