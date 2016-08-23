@@ -22,8 +22,11 @@ Configuration
 
 Usage
 -----
+**Important**: Allways run the script as www-data (or equivalent) user. Otherwise it will mess-up permissions.
+**Required**: Install the [DokuWiki include plugin](https://www.dokuwiki.org/plugin:include).
+
 To run the script e.g. every 5 minutes, set up root cron to
 
 ```bash
-*/5 * * * * cd /var/www/your-web-folder/mail-fetcher/; ruby2.0 fetcher.rb >> fetch.log
+*/5 * * * * cd /var/www/your-web-folder/mail-fetcher/; sudo -u www-data ruby2.0 fetcher.rb >> fetch.log
 ```
