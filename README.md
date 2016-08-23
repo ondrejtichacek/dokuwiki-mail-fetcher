@@ -22,8 +22,8 @@ Configuration
 
 Usage
 -----
-**Important**: Allways run the script as www-data (or equivalent) user. Otherwise it will mess-up permissions.
-**Required**: Install the [DokuWiki include plugin](https://www.dokuwiki.org/plugin:include).
+* **Important**: Allways run the script as www-data (or equivalent) user. Otherwise it will mess up file permissions.
+* **Required**: Install the [DokuWiki include plugin](https://www.dokuwiki.org/plugin:include).
 
 To run the script e.g. every 5 minutes, set up root cron to
 
