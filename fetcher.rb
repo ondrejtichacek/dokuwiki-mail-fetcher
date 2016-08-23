@@ -89,7 +89,7 @@ imap.search(["NOT", "SEEN"]).each do |message_id|
 
     #Parse the email to wiki syntax 
     parsed_mail = "<WRAP box 100%>\n" + \
-                  "<color #AAAAAA>" +  mail.date.to_s + " from " + mail.from.to_s + "</color>\n" + \
+                  "<fs 85%><color #AAAAAA>" +  mail.date.to_s + " from " + mail.from.to_s + "</color></fs>\n" + \
                   "==== " + subject + " ====\n\n" + plain_part + "</WRAP>\n"
     
     #Work in temporary file
