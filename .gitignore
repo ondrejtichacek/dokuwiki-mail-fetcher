@@ -16,3 +16,5 @@ rerun.txt
 pickle-email-*.html
 settings.yml
 *~
+
+.remote-sync.json
